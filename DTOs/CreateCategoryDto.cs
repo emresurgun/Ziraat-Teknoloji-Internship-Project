@@ -9,7 +9,4 @@ public class CreateCategoryDto
 
     [Required]
     public string Description { get; set; }
-    
-    
-    
 }

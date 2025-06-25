@@ -164,3 +164,4 @@
 /Users/emresurgun/RiderProjects/RestAPI/bin/Debug/net8.0/System.Diagnostics.DiagnosticSource.dll
 /Users/emresurgun/RiderProjects/RestAPI/bin/Debug/net8.0/Microsoft.AspNetCore.Authorization.dll
 /Users/emresurgun/RiderProjects/RestAPI/bin/Debug/net8.0/Microsoft.AspNetCore.Metadata.dll
+/Users/emresurgun/RiderProjects/RestAPI/obj/Debug/net8.0/RestAPI.sourcelink.json
