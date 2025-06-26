@@ -23,22 +23,22 @@ public class DeleteProductController : ControllerBase
             return StatusCode(403, "You must be an admin to delete products.");
         }
 
-        var category = await _dbContext.Categories
-            .FirstOrDefaultAsync(c => c.CategoryName == dto.CategoryName.Trim());
-        var trimmedName = dto.ProductName.Trim();
-        var product = await _dbContext.Products.FirstOrDefaultAsync(p => p.Name == trimmedName);
+        var categoryName = dto.CategoryName.Trim();
+        var productName = dto.ProductName.Trim();
 
-        if (product == null)
-        {
-            return NotFound("Product not found.");
-        }
-       
+        var category = await _dbContext.Categories
+            .Include(c => c.Products)
+            .FirstOrDefaultAsync(c => c.CategoryName == categoryName);
+
         if (category == null)
             return NotFound("Category not found.");
 
+        var product = category.Products.FirstOrDefault(p => p.Name == productName);
+        if (product == null)
+            return NotFound("Product not found in the specified category.");
+
         _dbContext.Products.Remove(product);
         await _dbContext.SaveChangesAsync();
-
         return Ok(new { message = "Product deleted successfully." });
     }
 }
