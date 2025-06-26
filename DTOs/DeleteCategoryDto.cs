@@ -3,5 +3,5 @@ using System.ComponentModel.DataAnnotations;
 public class DeleteCategoryDto
 {
     [Required]
-    public int Id { get; set; }
+    public string CategoryName { get; set; } = string.Empty;
 }
