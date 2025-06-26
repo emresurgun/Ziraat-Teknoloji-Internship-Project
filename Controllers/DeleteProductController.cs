@@ -18,12 +18,13 @@ public class DeleteProductController : ControllerBase
     [HttpDelete]
     public async Task<IActionResult> DeleteProduct([FromBody] DeleteProductDto dto)
     {
-        // Rol kontrolü
         if (!User.IsInRole("Admin"))
         {
             return StatusCode(403, "You must be an admin to delete products.");
         }
 
+        var category = await _dbContext.Categories
+            .FirstOrDefaultAsync(c => c.CategoryName == dto.CategoryName.Trim());
         var trimmedName = dto.ProductName.Trim();
         var product = await _dbContext.Products.FirstOrDefaultAsync(p => p.Name == trimmedName);
 
@@ -31,6 +32,9 @@ public class DeleteProductController : ControllerBase
         {
             return NotFound("Product not found.");
         }
+       
+        if (category == null)
+            return NotFound("Category not found.");
 
         _dbContext.Products.Remove(product);
         await _dbContext.SaveChangesAsync();
