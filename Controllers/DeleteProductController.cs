@@ -5,7 +5,7 @@ using RestAPI.Data;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize]
+[Authorize(Roles = "Admin")]
 public class DeleteProductController : ControllerBase
 {
     private readonly AppDbContext _dbContext;
