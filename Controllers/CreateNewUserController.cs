@@ -23,7 +23,7 @@ public class CreateNewUserController : ControllerBase
         _configuration = configuration;
     }
     
-    [HttpPost("CreateUser")]
+    [HttpPost()]
     public async Task<IActionResult> CreateUser([FromBody] CreateUserDto dto)
     {
         var normalizedUsername = dto.Username?.Trim().ToLower();

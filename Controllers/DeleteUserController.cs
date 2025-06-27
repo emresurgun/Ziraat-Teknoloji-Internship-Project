@@ -21,7 +21,7 @@ public class DeleteUserController : ControllerBase
         _configuration = configuration;
     }
 
-    [HttpDelete("DeleteUser")]
+    [HttpDelete]
     public async Task<IActionResult> DeleteUser([FromBody] DeleteUserDto dto)
     {
         var currentUsername = User.Identity?.Name;

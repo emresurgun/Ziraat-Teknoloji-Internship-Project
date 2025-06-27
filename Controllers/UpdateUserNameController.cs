@@ -20,7 +20,7 @@ public class ChangeUsernameController : ControllerBase
         _configuration = configuration;
     }
 
-    [HttpPut("UpdateUsername")]
+    [HttpPut]
     public async Task<IActionResult> UpdateUsername([FromBody] UpdateUsernameDto dto)
     {
         var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Username.ToLower() == dto.OldUsername.ToLower());

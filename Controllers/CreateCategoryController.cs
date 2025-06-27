@@ -19,7 +19,7 @@ public class CreateCategoryController : ControllerBase
         _dbContext = dbContext;
     }
 
-    [HttpPost("CreateCategory")]
+    [HttpPost]
     public async Task<IActionResult> CreateCategory([FromBody] CreateCategoryDto dto)
     {
         if (string.IsNullOrEmpty(dto.CategoryName) || string.IsNullOrWhiteSpace(dto.Description))

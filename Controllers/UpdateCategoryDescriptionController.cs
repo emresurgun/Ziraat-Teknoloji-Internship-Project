@@ -19,7 +19,7 @@ namespace RestAPI.Controllers
             _dbContext = dbContext;
         }
 
-        [HttpPut("UpdateDescription")]
+        [HttpPut]
         public async Task<IActionResult> UpdateDescription([FromBody] UpdateCategoryDescriptionDto dto)
         {
             if (string.IsNullOrWhiteSpace(dto.CategoryName))

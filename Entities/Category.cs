@@ -6,7 +6,7 @@ namespace RestAPI.Entities
         public string CategoryName { get; set; }
         public string Description { get; set; }
 
-        // --- Eklenen Alanlar ---
+      
         public int? ParentCategoryId { get; set; }
         public Category? ParentCategory { get; set; }
         
