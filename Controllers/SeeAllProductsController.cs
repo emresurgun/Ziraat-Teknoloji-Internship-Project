@@ -8,7 +8,7 @@ namespace RestAPI.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "Admin")]
+[Authorize]
 public class SeeAllProductsController : ControllerBase
 {
     private readonly AppDbContext _dbContext;
