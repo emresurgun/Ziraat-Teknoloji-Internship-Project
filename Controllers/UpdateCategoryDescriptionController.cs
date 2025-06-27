@@ -10,17 +10,17 @@ namespace RestAPI.Controllers
     [ApiController]
     [Route("api/[controller]")]
     [Authorize(Roles = "Admin")]
-    public class ChangeCategoryDescriptionController : ControllerBase
+    public class UpdateCategoryDescriptionController : ControllerBase
     {
         private readonly AppDbContext _dbContext;
 
-        public ChangeCategoryDescriptionController(AppDbContext dbContext)
+        public UpdateCategoryDescriptionController(AppDbContext dbContext)
         {
             _dbContext = dbContext;
         }
 
         [HttpPut("UpdateDescription")]
-        public async Task<IActionResult> UpdateDescription([FromBody] ChangeCategoryDescriptionDto dto)
+        public async Task<IActionResult> UpdateDescription([FromBody] UpdateCategoryDescriptionDto dto)
         {
             if (string.IsNullOrWhiteSpace(dto.CategoryName))
             {

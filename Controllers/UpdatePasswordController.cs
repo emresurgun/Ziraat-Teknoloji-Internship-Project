@@ -9,19 +9,19 @@ namespace RestAPI.Controllers;
 [ApiController]
 [Authorize]
 [Route("api/[controller]")]
-public class ChangePasswordController : ControllerBase
+public class UpdatePasswordController : ControllerBase
 {
     private readonly AppDbContext _dbContext;
     private readonly IConfiguration _configuration;
 
-    public ChangePasswordController(AppDbContext dbContext, IConfiguration configuration)
+    public UpdatePasswordController(AppDbContext dbContext, IConfiguration configuration)
     {
         _dbContext = dbContext;
         _configuration = configuration;
     }
 
     [HttpPost]
-    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto dto)
+    public async Task<IActionResult> ChangePassword([FromBody] UpdatePasswordDto dto)
     {
         if (string.IsNullOrWhiteSpace(dto.Username) || string.IsNullOrWhiteSpace(dto.NewPassword))
         {

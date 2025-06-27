@@ -9,17 +9,17 @@ namespace RestAPI.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize(Roles = "Admin")]
-public class ChangeProductNameController : ControllerBase
+public class UpdateProductNameController : ControllerBase
 {
     private readonly AppDbContext _dbContext;
     
-    public ChangeProductNameController(AppDbContext dbContext)
+    public UpdateProductNameController(AppDbContext dbContext)
     {
         _dbContext = dbContext;
     }
 
     [HttpPut]
-    public async Task<IActionResult> ChangeProductName(ChangeProductNameDto dto)
+    public async Task<IActionResult> ChangeProductName(UpdateProductNameDto dto)
     {
         if (!User.IsInRole("Admin"))
         {

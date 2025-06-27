@@ -12,12 +12,12 @@ namespace RestAPI.Controllers;
 [ApiController]
 [Authorize(Roles = "Admin")]
 [Route("api/[controller]")]
-public class CreatingNewUserController : ControllerBase
+public class CreateNewUserController : ControllerBase
 {
     private readonly AppDbContext _dbContext;
     private readonly IConfiguration _configuration;
     
-    public CreatingNewUserController(AppDbContext dbContext, IConfiguration configuration)
+    public CreateNewUserController(AppDbContext dbContext, IConfiguration configuration)
     {
         _dbContext = dbContext;
         _configuration = configuration;

@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace RestAPI.DTOs;
 
-public class ChangeProductNameDto
+public class UpdateProductNameDto
 {
     [Required]
     public string CurrentProdcutName { get; set; } 
