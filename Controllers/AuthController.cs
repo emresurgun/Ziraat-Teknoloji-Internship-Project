@@ -22,27 +22,30 @@ public class AuthController : ControllerBase
         _dbContext = dbContext;
         _configuration = configuration;
     }
-    
-    [HttpPost("register")] 
-    public async Task<IActionResult> Register(UserRegisterDto userDto)
+
+    [HttpPost("register")]
+    public async Task<IActionResult> Register([FromBody] UserRegisterDto userDto)
     {
-        using var sha256 = SHA256.Create();
-        var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(userDto.password));
-        var hashedPassword = Convert.ToBase64String(hashedBytes);
-        
-        var normalizedUsername = userDto.username?.Trim().ToLower();
-        if (string.IsNullOrWhiteSpace(normalizedUsername) ||
-            string.IsNullOrWhiteSpace(userDto.password))
-        {
-            return BadRequest("Username and password are required.");
-        }
+        if (userDto == null)
+            return BadRequest(new { message = "Request body is null." });
+
+        if (string.IsNullOrWhiteSpace(userDto.username) || string.IsNullOrWhiteSpace(userDto.password))
+            return BadRequest(new { message = "Username and password are required." });
+
+        var normalizedUsername = userDto.username.Trim().ToLower();
 
         var existingUser = await _dbContext.Users
             .FirstOrDefaultAsync(u => u.Username.ToLower() == normalizedUsername);
+
         if (existingUser != null)
         {
-            return BadRequest("Username is already taken.");
+            // Return clear, explicit message if username is already taken
+            return Conflict(new { message = "Username is already taken." });
         }
+
+        using var sha256 = SHA256.Create();
+        var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(userDto.password));
+        var hashedPassword = Convert.ToBase64String(hashedBytes);
 
         var user = new User
         {
@@ -50,36 +53,44 @@ public class AuthController : ControllerBase
             PasswordHash = hashedPassword,
             Role = "User"
         };
+
         _dbContext.Users.Add(user);
         await _dbContext.SaveChangesAsync();
-        
+
         var response = new UserResponseDto
         {
             Id = user.Id,
             Username = user.Username,
             Role = user.Role
         };
+
         return Created($"/users/{user.Id}", response);
     }
 
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] UserLoginDto loginDto)
     {
-        var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Username == loginDto.Username);
+        if (loginDto == null)
+            return BadRequest(new { message = "Request body is null." });
+
+        var normalizedUsername = loginDto.Username?.Trim().ToLower();
+        var user = await _dbContext.Users
+            .FirstOrDefaultAsync(u => u.Username.ToLower() == normalizedUsername);
+
         if (user == null)
-            return BadRequest("User not found.");
-        
+            return BadRequest(new { message = "User not found." });
+
         using var sha256 = SHA256.Create();
         var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(loginDto.Password));
         var hashedPassword = Convert.ToBase64String(hashedBytes);
-        
+
         if (hashedPassword != user.PasswordHash)
-            return Unauthorized();
-        
+            return Unauthorized(new { message = "Invalid credentials." });
+
         var token = GenerateToken(user);
         return Ok(new { Token = token });
     }
-    
+
     private string GenerateToken(User user)
     {
         var claims = new List<Claim>
@@ -88,11 +99,12 @@ public class AuthController : ControllerBase
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim(ClaimTypes.Role, user.Role),
         };
+
         var key = _configuration["Jwt:Key"];
         var issuer = _configuration["Jwt:Issuer"];
         var audience = _configuration["Jwt:Audience"];
         var durationInMinutes = int.Parse(_configuration["Jwt:DurationInMinutes"]);
-        
+
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
@@ -102,7 +114,7 @@ public class AuthController : ControllerBase
             claims: claims,
             expires: DateTime.UtcNow.AddMinutes(durationInMinutes),
             signingCredentials: credentials);
-        
+
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 }
