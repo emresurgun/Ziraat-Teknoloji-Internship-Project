@@ -1,3 +1,4 @@
+import { jwtDecode } from "jwt-decode";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -5,14 +6,10 @@ function RegisterPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
 
   const navigate = useNavigate();
 
   const handleRegister = async () => {
-    setError("");
-    setSuccess("");
-
     if (!username.trim()) {
       setError("Username cannot be empty.");
       return;
@@ -23,31 +20,90 @@ function RegisterPage() {
     }
 
     try {
+      setError("");
+      
+      // Try to register first
       const res = await fetch("http://localhost:5268/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
       });
 
-      if (res.status === 409) {
-        // 409 Conflict status for username taken
-        const data = await res.json();
-        setError(data.message || "Username is already taken.");
-        return;
-      }
+      // Check if registration was successful
+      if (res.ok) {
+        // Registration successful, now login the user
+        try {
+          const loginRes = await fetch("http://localhost:5268/api/auth/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, password }),
+          });
 
-      if (!res.ok) {
-        const data = await res.json();
-        setError(data.message || "Registration failed.");
-        return;
-      }
+          if (loginRes.ok) {
+            const loginData = await loginRes.json();
+            
+            // Handle both token and Token field names
+            const token = loginData.token || loginData.Token;
+            
+            if (token) {
+              localStorage.setItem("token", token);
+              const decoded = jwtDecode(token);
+              const role = decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"];
 
-      setSuccess("Registration successful! Redirecting to login...");
-      setTimeout(() => {
-        navigate("/login");
-      }, 2000);
+              alert("Register successful");
+
+              if (role === "Admin") {
+                navigate("/admin");
+              } else {
+                navigate("/user/products");
+              }
+              return;
+            }
+          }
+          
+          // If login fails, still show success (registration worked)
+          alert("Registration successful! Please login with your credentials.");
+          navigate("/login");
+          
+        } catch (loginErr) {
+          // Login failed but registration worked
+          alert("Registration successful! Please login with your credentials.");
+          navigate("/login");
+        }
+        
+      } else {
+        // Registration failed - check why
+        let errorData = null;
+        try {
+          errorData = await res.json();
+        } catch (e) {
+          // Ignore JSON parse errors
+        }
+        
+        console.log("Registration error data:", errorData); // Debug log
+        
+        if (errorData && errorData.message) {
+          const errorMessage = errorData.message.toLowerCase();
+          if (errorMessage.includes("already exists") || 
+              errorMessage.includes("username") || 
+              errorMessage.includes("taken") ||
+              errorMessage.includes("duplicate") ||
+              errorMessage.includes("user") ||
+              errorMessage.includes("exist")) {
+            setError("Username already exists. Please choose a different username.");
+          } else {
+            setError("Registration failed: " + errorData.message);
+          }
+        } else if (res.status === 400 || res.status === 409) {
+          // Common status codes for duplicate username
+          setError("Username already exists. Please choose a different username.");
+        } else {
+          setError("Registration failed. Please try a different username.");
+        }
+      }
+      
     } catch (err) {
-      setError("Network error. Please try again later.");
+      setError("Connection error. Please check your internet connection and try again.");
     }
   };
 
@@ -57,9 +113,12 @@ function RegisterPage() {
     alignItems: "center",
     justifyContent: "center",
     height: "100vh",
+    width: "100vw",
+    overflow: "hidden",
     fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-    backgroundColor: "#f5f7fa",
-    padding: "20px",
+    backgroundColor: "#26292B", // Mercedes grisi
+    padding: 0,
+    margin: 0
   };
 
   const formStyle = {
@@ -96,7 +155,7 @@ function RegisterPage() {
     fontSize: "16px",
     borderRadius: "4px",
     border: "none",
-    backgroundColor: "#28a745",
+    backgroundColor: "#007bff",
     color: "#fff",
     fontWeight: "600",
     cursor: "pointer",
@@ -104,12 +163,7 @@ function RegisterPage() {
 
   const errorStyle = {
     color: "red",
-    marginBottom: "20px",
-    fontSize: "14px",
-  };
-
-  const successStyle = {
-    color: "green",
+    marginTop: "-15px",
     marginBottom: "20px",
     fontSize: "14px",
   };
@@ -136,8 +190,8 @@ function RegisterPage() {
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           style={inputStyle}
-          autoComplete="username"
           required
+          autoComplete="username"
         />
 
         <label htmlFor="password" style={labelStyle}>
@@ -150,15 +204,26 @@ function RegisterPage() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           style={inputStyle}
-          autoComplete="new-password"
           required
+          autoComplete="current-password"
         />
 
         {error && <p style={errorStyle}>{error}</p>}
-        {success && <p style={successStyle}>{success}</p>}
 
         <button type="submit" style={buttonStyle}>
           Register
+        </button>
+
+        <button
+          type="button"
+          style={{
+            ...buttonStyle,
+            backgroundColor: "#6c757d",
+            marginTop: "10px",
+          }}
+          onClick={() => navigate("/login")}
+        >
+          Go back to login page
         </button>
       </form>
     </div>

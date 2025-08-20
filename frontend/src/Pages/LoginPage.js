@@ -44,7 +44,7 @@ function LoginPage() {
       if (role === "Admin") {
         navigate("/admin");
       } else {
-        navigate("/products");
+        navigate("/user/products");
       }
     } catch (err) {
       setError(err.message);
@@ -59,8 +59,7 @@ function LoginPage() {
       justifyContent: "center",
       height: "100vh",
       fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-      backgroundColor: "#f5f7fa",
-      padding: "20px",
+      backgroundColor: "#26292B" // Mercedes grisi
     }}>
       <form
         style={{
