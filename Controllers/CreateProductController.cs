@@ -5,43 +5,53 @@ using RestAPI.Data;
 using RestAPI.DTOs;
 using RestAPI.Entities;
 
-namespace RestAPI.Controllers;
-
-[ApiController]
-[Route("api/[controller]")]
-[Authorize(Roles = "Admin")]
-public class CreateProductController : ControllerBase
+namespace RestAPI.Controllers
 {
-    private readonly AppDbContext _dbContext;
-
-    public CreateProductController(AppDbContext dbContext)
+    [ApiController]
+    [Route("api/[controller]")]
+    [Authorize(Roles = "Admin")]
+    public class CreateProductController : ControllerBase
     {
-        _dbContext = dbContext;
-    }
+        private readonly AppDbContext _dbContext;
 
-    [HttpPost]
-    public async Task<IActionResult> CreateProduct(CreateProductDto dto)
-    {
-        if (string.IsNullOrWhiteSpace(dto.CategoryName))
-            return BadRequest("Category name is required.");
-
-        var category = await _dbContext.Categories
-            .FirstOrDefaultAsync(c => c.CategoryName == dto.CategoryName);
-
-        if (category == null)
-            return BadRequest("Category not found.");
-
-        var product = new Product
+        public CreateProductController(AppDbContext dbContext)
         {
-            Name = dto.ProductName,
-            Price = dto.ProductPrice,
-            Description = dto.ProductDescription,
-            CategoryId = category.Id
-        };
+            _dbContext = dbContext;
+        }
 
-        _dbContext.Products.Add(product);
-        await _dbContext.SaveChangesAsync();
+        [HttpPost]
+        public async Task<IActionResult> CreateProduct([FromBody] CreateProductDto dto)
+        {
+            if (!User.IsInRole("Admin"))
+            {
+                return StatusCode(403, "You must be an admin to create products.");
+            }
 
-        return Ok(new { message = "Product created successfully." });
+            var category = await _dbContext.Categories
+                .Include(c => c.Products)
+                .FirstOrDefaultAsync(c => c.CategoryName.ToLower() == dto.CategoryName.Trim().ToLower());
+
+            if (category == null)
+                return NotFound("Category not found.");
+
+            if (category.Products.Any(p => p.Name.ToLower() == dto.ProductName.Trim().ToLower()))
+                return BadRequest("Product with this name already exists in the category.");
+
+            // Ensure Description is never null or empty
+            var description = string.IsNullOrWhiteSpace(dto.Description) ? "No description" : dto.Description.Trim();
+
+            var product = new Product
+            {
+                Name = dto.ProductName.Trim(),
+                Price = dto.Price,
+                Description = description,
+                Category = category
+            };
+
+            _dbContext.Products.Add(product);
+            await _dbContext.SaveChangesAsync();
+
+            return Ok("Product created successfully.");
+        }
     }
 }
